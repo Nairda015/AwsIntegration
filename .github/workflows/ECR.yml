@@ -6,13 +6,14 @@ on:
       image-tag:
         required: true
         type: string
-        description: 'The image tag for the Docker image'
+        description: 'The image tag'
 
 jobs:
   ci:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+      contents: read
     steps:
 
       - name: Checkout
@@ -32,9 +33,9 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
+          aws-region: eu-central-1
           role-to-assume: ${{ secrets.ROLE_TO_ASSUME_ARN }}
           role-session-name: ${{ secrets.AWS_OWNER }}-session
-          aws-region: eu-central-1
 
       - name: Login to Amazon ECR
         id: login-ecr
