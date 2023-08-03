@@ -7,11 +7,10 @@ module "ecr" {
   enabled                 = var.enable_ecr
   source                  = "cloudposse/ecr/aws"
   version                 = "0.38.0"
+  
   namespace               = var.aws_owner_login
   stage                   = var.env_prefix
   name                    = var.app_name
-  //principals_full_access  = [module.oidc-github.iam_role_arn]
-  //principals_lambda       = [module.oidc-github.iam_role_arn]
   force_delete            = true
   enable_lifecycle_policy = false
   tags                    = { "Name" = "${local.name-prefix}-ecr" }
@@ -99,36 +98,17 @@ resource "github_actions_secret" "ecr_repository_name" {
 }
 
 
-# ECR Read User
-resource "aws_iam_user" "ecr_read_user" {
-  name = "ecr_read_user"
-  path = "/"
-  force_destroy = true
-  tags = { "Name" = "${local.name-prefix}-ecr-read-user" }
+# Lambda From ECR
+module "lambda_function" {
+  source         = "terraform-aws-modules/lambda/aws"
+  count          = var.enable_lambda ? 1 : 0
+  version = "5.3.0"
+  
+  function_name  = "${var.aws_owner_login}-${var.app_name}"
+  create_package = false
+  image_uri      = "${module.ecr.repository_url}:001"
+  package_type   = "Image"
+
+  create_lambda_function_url = true
+  authorization_type         = "NONE"
 }
-
-resource "aws_iam_policy" "ecr_pull_policy" {
-  name        = "ECRPullPolicy"
-  description = "ECR pull policy"
-
-  policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Sid" : "AllowPull",
-        "Effect" : "Allow",
-        "Action" : [
-          "ecr:BatchGetImage",
-          "ecr:GetDownloadUrlForLayer"
-        ],
-        "Resource" : module.ecr.repository_arn
-      }
-    ]
-  })
-}
-
-resource "aws_iam_user_policy_attachment" "example_attachment" {
-  user       = aws_iam_user.ecr_read_user.name
-  policy_arn = aws_iam_policy.ecr_pull_policy.arn
-}
-
