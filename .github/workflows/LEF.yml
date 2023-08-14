@@ -1,4 +1,4 @@
-name: Push to AWS ECR
+name: Push Lambda Empty Function to AWS ECR
 
 on:
   workflow_dispatch:
@@ -50,5 +50,5 @@ jobs:
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
           IMAGE_TAG: ${{ github.event.inputs.image-tag }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f AwsIntegration/Dockerfile .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f LambdaEmptyFunction/Dockerfile .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG

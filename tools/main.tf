@@ -1,19 +1,19 @@
 locals {
-  name-prefix = "${var.aws_owner_login}-${var.env_prefix}-${var.app_name}"
+  name_prefix = "${var.aws_owner_login}-${var.env_prefix}-${var.app_name}"
 }
 
 # ECR Repository
 module "ecr" {
-  enabled                 = var.enable_ecr
-  source                  = "cloudposse/ecr/aws"
-  version                 = "0.38.0"
-  
+  enabled = var.enable_ecr
+  source  = "cloudposse/ecr/aws"
+  version = "0.38.0"
+
   namespace               = var.aws_owner_login
   stage                   = var.env_prefix
   name                    = var.app_name
   force_delete            = true
   enable_lifecycle_policy = false
-  tags                    = { "Name" = "${local.name-prefix}-ecr" }
+  tags                    = { "Name" = "${local.name_prefix}-ecr" }
 }
 
 
@@ -33,7 +33,7 @@ module "oidc-github" {
     aws_iam_policy.ecr_push_policy.arn
   ]
 
-  tags = { "Name" = "${local.name-prefix}-oidc-github" }
+  tags = { "Name" = "${local.name_prefix}-oidc-github" }
 }
 resource "aws_iam_policy" "ecr_login_policy" {
   name        = "ECRLoginPolicy"
@@ -100,10 +100,10 @@ resource "github_actions_secret" "ecr_repository_name" {
 
 # Lambda From ECR
 module "lambda_function" {
-  source         = "terraform-aws-modules/lambda/aws"
-  count          = var.enable_lambda ? 1 : 0
+  source  = "terraform-aws-modules/lambda/aws"
+  count   = var.enable_lambda ? 1 : 0
   version = "5.3.0"
-  
+
   function_name  = "${var.aws_owner_login}-${var.app_name}"
   create_package = false
   image_uri      = "${module.ecr.repository_url}:001"
@@ -111,4 +111,41 @@ module "lambda_function" {
 
   create_lambda_function_url = true
   authorization_type         = "NONE"
+}
+
+module "lambda_projections" {
+  create  = var.enable_sqs_lambda ? 1 : 0
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "5.3.0"
+
+  function_name  = "${var.aws_owner_login}-projections"
+  create_package = false
+  image_uri      = "${module.ecr.repository_url}:Projections-latest"
+  package_type   = "Image"
+  memory_size    = 256
+  timeout        = 10
+
+  attach_policy = true
+  policy        = aws_iam_policy.policy-projections.arn
+
+  tags = { "Name" = "${local.name_prefix}-projections" }
+}
+resource "aws_iam_policy" "policy-projections" {
+  name = "${local.name_prefix}-projections-policy"
+  path = "/"
+
+  policy = jsonencode({
+    Version   = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "sqs:*",
+          "aoss:*",
+          "ssm:*",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }
+    ]
+  })
 }
