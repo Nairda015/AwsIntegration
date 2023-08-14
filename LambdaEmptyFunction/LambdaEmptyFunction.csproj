@@ -23,4 +23,9 @@
         <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="7.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
     </ItemGroup>
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
 </Project>
