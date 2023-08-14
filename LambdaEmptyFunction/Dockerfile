@@ -2,7 +2,7 @@ FROM public.ecr.aws/lambda/dotnet:7 AS base
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0-bullseye-slim as build
 WORKDIR /src
-COPY ["LambdaEmptyFunction.csproj", "LambdaEmptyFunction/"]
+COPY ["LambdaEmptyFunction/LambdaEmptyFunction.csproj", "LambdaEmptyFunction/"]
 RUN dotnet restore "LambdaEmptyFunction/LambdaEmptyFunction.csproj"
 COPY . .
 WORKDIR "/src/LambdaEmptyFunction"
