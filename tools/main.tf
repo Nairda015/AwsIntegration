@@ -114,7 +114,7 @@ module "lambda_function" {
 }
 
 module "lambda_projections" {
-  create  = var.enable_sqs_lambda ? 1 : 0
+  count  = var.enable_sqs_lambda ? 1 : 0
   source  = "terraform-aws-modules/lambda/aws"
   version = "5.3.0"
 
