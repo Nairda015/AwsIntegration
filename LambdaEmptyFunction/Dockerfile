@@ -14,3 +14,4 @@ RUN dotnet publish "LambdaEmptyFunction.csproj" -c Release --runtime linux-x64 -
 FROM base AS final
 WORKDIR /var/task
 COPY --from=publish /app/publish .
+CMD ["LambdaEmptyFunction::LambdaEmptyFunction.Function::FunctionHandler"]
