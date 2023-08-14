@@ -48,7 +48,7 @@ public class Function
         return services.BuildServiceProvider();
     }
     
-    public async Task FunctionHandler(SQSEvent evnt, ILambdaContext context)
+    public async Task SqsFunctionHandler(SQSEvent evnt, ILambdaContext context)
     {
         foreach (var message in evnt.Records)
         {
