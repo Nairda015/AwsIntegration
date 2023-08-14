@@ -16,7 +16,7 @@ provider "aws" {
   default_tags {
     tags = {
       Environment = var.env_prefix
-      Name        = local.name-prefix
+      Name        = local.name_prefix
       Owner       = var.aws_owner_login
       ManagedBy   = "terraform"
     }
