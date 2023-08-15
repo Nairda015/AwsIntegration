@@ -113,25 +113,25 @@ module "lambda_function" {
   authorization_type         = "NONE"
 }
 
-module "lambda_projections" {
-  create  = var.enable_sqs_lambda ? 1 : 0
+module "lambda_empty_function" {
+  count  = var.enable_sqs_lambda ? 1 : 0
   source  = "terraform-aws-modules/lambda/aws"
   version = "5.3.0"
 
-  function_name  = "${var.aws_owner_login}-projections"
+  function_name  = "${var.aws_owner_login}-lambda-empty-function"
   create_package = false
-  image_uri      = "${module.ecr.repository_url}:Projections-latest"
+  image_uri      = "${module.ecr.repository_url}:lambda-empty-function-latest"
   package_type   = "Image"
   memory_size    = 256
   timeout        = 10
 
   attach_policy = true
-  policy        = aws_iam_policy.policy-projections.arn
+  policy        = aws_iam_policy.policy_lambda_empty_function.arn
 
-  tags = { "Name" = "${local.name_prefix}-projections" }
+  tags = { "Name" = "${local.name_prefix}-lambda-empty-function" }
 }
-resource "aws_iam_policy" "policy-projections" {
-  name = "${local.name_prefix}-projections-policy"
+resource "aws_iam_policy" "policy_lambda_empty_function" {
+  name = "${local.name_prefix}-lambda-empty-function-policy"
   path = "/"
 
   policy = jsonencode({

@@ -11,5 +11,11 @@
   "package-type": "image",
   "function-memory-size": 256,
   "function-timeout": 30,
-  "image-command": "LambdaEmptyFunction::LambdaEmptyFunction.Function::FunctionHandler"
+  "image-command": "LambdaEmptyFunction::LambdaEmptyFunction.Function::FunctionHandler",
+  "function-handler": "bootstrap",
+  "msbuild-parameters": "--self-contained true",
+  "docker-host-build-output-dir": "./bin/Release/net7.0",
+  "function-name": "LambdaEmptyFunction",
+  "tag": "LambdaEmptyFunction:latest",
+  "dockerfile": "Dockerfile"
 }
