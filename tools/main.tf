@@ -12,6 +12,7 @@ module "ecr" {
   stage                   = var.env_prefix
   name                    = var.app_name
   force_delete            = true
+  image_tag_mutability    = "MUTABLE"
   enable_lifecycle_policy = false
   tags                    = { "Name" = "${local.name_prefix}-ecr" }
 }
@@ -114,7 +115,7 @@ module "lambda_function" {
 }
 
 module "lambda_empty_function" {
-  count  = var.enable_sqs_lambda ? 1 : 0
+  count   = var.enable_sqs_lambda ? 1 : 0
   source  = "terraform-aws-modules/lambda/aws"
   version = "5.3.0"
 
