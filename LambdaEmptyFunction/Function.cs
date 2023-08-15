@@ -1,26 +1,36 @@
 using Amazon.Lambda.Core;
-using Amazon.Lambda.SQSEvents;
-using MediatR;
 using Microsoft.Extensions.Configuration;
+
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
+// using Amazon.Lambda.SQSEvents;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
 namespace LambdaEmptyFunction;
 
-public record Casing(string Lower, string Upper);
-
+public record Input(string Message);
 public class Function
 {
-    public Casing FunctionHandler(string input, ILambdaContext context)
+    public async Task<string> FunctionHandler(Input input, ILambdaContext context)
     {
-        return new Casing(input.ToLower(), input.ToUpper());
+        Console.WriteLine(input);
+        
+        using var scope = _serviceProvider.CreateScope();
+        
+        var request = new TestRequest(input.Message);
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        var result = await mediator.Send(request);
+        
+        context.Logger.LogInformation(result);
+        
+        return $"Message returned from handler: {result}";
     }
-    
-    
-    // custom code
+
+
     private readonly IServiceProvider _serviceProvider;
     private readonly IConfiguration _configuration;
     public Function()
@@ -33,32 +43,33 @@ public class Function
     private static IConfiguration ConfigureAppConfiguration() => new ConfigurationBuilder()
         .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
         .Build();
-
+    
     private static IServiceProvider ConfigureServices(IConfiguration config)
     {
         var services = new ServiceCollection();
-        
+
+        services.AddSingleton<IConfiguration>(config);
         services.AddMediatR(x =>
         {
             x.RegisterServicesFromAssemblyContaining<Function>();
         });
         
         services.AddDefaultAWSOptions(config.GetAWSOptions());
-
+    
         return services.BuildServiceProvider();
     }
     
-    public async Task SqsFunctionHandler(SQSEvent evnt, ILambdaContext context)
-    {
-        foreach (var message in evnt.Records)
-        {
-            using var scope = _serviceProvider.CreateScope();
-            var request = new TestRequest(message.Body);
-            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-            var result = await mediator.Send(request);
-            context.Logger.LogInformation(result);
-        }
-    }
+    // public async Task SqsFunctionHandler(SQSEvent evnt, ILambdaContext context)
+    // {
+    //     foreach (var message in evnt.Records)
+    //     {
+    //         using var scope = _serviceProvider.CreateScope();
+    //         var request = new TestRequest(message.Body);
+    //         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+    //         var result = await mediator.Send(request);
+    //         context.Logger.LogInformation(result);
+    //     }
+    // }
 }
 
 public record TestRequest(string Message) : IRequest<string>;
